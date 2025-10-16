@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard Test — DONS Admin</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container layout">
+    <aside class="sidebar">
+      <h2 class="brand">DONS Admin</h2>
+      <nav>
+        <a class="active" href="dashboard_test.html">Tableau de bord</a>
+        <a href="admin_groups.html">Groupes</a>
+        <a href="admin_members.html">Membres</a>
+        <a href="admin_exports.html">Exports</a>
+        <a href="admin_payments.html">Paiements</a>
+        <a href="#" id="logout">Se déconnecter</a>
+      </nav>
+    </aside>
+    <div class="content card">
+      <div class="header">
+        <h1 class="title">Tableau de bord - Test</h1>
+        <p id="user-info">Chargement...</p>
+      </div>
+      
+      <div class="toolbar">
+        <div class="row" style="gap:8px">
+          <select id="status">
+            <option value="">Tous statuts</option>
+            <option value="pending">En attente</option>
+            <option value="success">Réussi</option>
+            <option value="failed">Échoué</option>
+          </select>
+          <button id="refresh">Actualiser</button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Référence</th>
+              <th>Montant</th>
+              <th>Statut</th>
+              <th>Date</th>
+              <th>Méthode</th>
+            </tr>
+          </thead>
+          <tbody id="payments-table">
+            <tr>
+              <td colspan="5" class="text-center">Chargement...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="api.js"></script>
+  <script>
+    const userInfo = document.getElementById('user-info');
+    const paymentsTable = document.getElementById('payments-table');
+    const refreshBtn = document.getElementById('refresh');
+    const logoutBtn = document.getElementById('logout');
+
+    async function checkAuth() {
+      try {
+        console.log('Vérification de l\'authentification...');
+        const token = DonsApi.getAuthToken();
+        console.log('Token stocké:', token);
+        
+        if (!token) {
+          console.log('Pas de token, redirection vers login');
+          location.href = 'login.html';
+          return;
+        }
+
+        const me = await DonsApi.AuthApi.me();
+        console.log('Utilisateur récupéré:', me);
+        userInfo.textContent = `Connecté: ${me.first_name || ''} ${me.last_name || ''} (${me.phone_number || ''})`;
+        
+        // Charger les paiements
+        await loadPayments();
+        
+      } catch (e) {
+        console.error('Erreur d\'authentification:', e);
+        userInfo.textContent = 'Erreur d\'authentification';
+        location.href = 'login.html';
+      }
+    }
+
+    async function loadPayments() {
+      try {
+        // Simuler des données de paiement
+        const mockPayments = [
+          {
+            payment_reference: 'PAY001',
+            amount: 5000,
+            status: 'success',
+            created_at: '2025-10-15',
+            payment_method: 'Mobile Money'
+          },
+          {
+            payment_reference: 'PAY002',
+            amount: 3000,
+            status: 'pending',
+            created_at: '2025-10-14',
+            payment_method: 'Orange Money'
+          }
+        ];
+
+        paymentsTable.innerHTML = '';
+        mockPayments.forEach(payment => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${payment.payment_reference}</td>
+            <td>${payment.amount} FCFA</td>
+            <td><span class="status ${payment.status}">${payment.status}</span></td>
+            <td>${payment.created_at}</td>
+            <td>${payment.payment_method}</td>
+          `;
+          paymentsTable.appendChild(tr);
+        });
+      } catch (e) {
+        console.error('Erreur lors du chargement des paiements:', e);
+        paymentsTable.innerHTML = '<tr><td colspan="5" class="text-center">Erreur lors du chargement</td></tr>';
+      }
+    }
+
+    refreshBtn.addEventListener('click', loadPayments);
+    logoutBtn.addEventListener('click', async () => {
+      await DonsApi.AuthApi.logout();
+      location.href = 'login.html';
+    });
+
+    // Initialisation
+    checkAuth();
+  </script>
+</body>
+</html>
