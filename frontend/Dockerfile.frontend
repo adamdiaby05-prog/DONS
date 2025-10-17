@@ -23,11 +23,11 @@ RUN flutter doctor
 # Définir le répertoire de travail
 WORKDIR /app
 
-# Copier seulement le dossier frontend
-COPY frontend/ ./frontend/
+# Copier les fichiers du frontend (contexte est déjà /frontend)
+COPY . .
 
 # Aller dans le dossier frontend
-WORKDIR /app/frontend
+WORKDIR /app
 
 # Vérifier que nous sommes dans le bon répertoire
 RUN ls -la
@@ -42,5 +42,5 @@ RUN flutter build web --release
 EXPOSE 3000
 
 # Démarrer le serveur
-WORKDIR /app/frontend/build/web
+WORKDIR /app/build/web
 CMD ["python3", "-m", "http.server", "3000"]
