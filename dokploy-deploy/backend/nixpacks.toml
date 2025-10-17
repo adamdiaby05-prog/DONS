@@ -1,0 +1,17 @@
+# Configuration Nixpacks pour l'API DONS Backend
+[phases.setup]
+nixPkgs = ["php", "phpPackages.composer", "nginx"]
+
+[phases.install]
+cmds = [
+    "mkdir -p /etc/nginx/ /var/log/nginx/ /var/cache/nginx/",
+    "composer install --ignore-platform-reqs --no-dev --optimize-autoloader"
+]
+
+[phases.build]
+cmds = [
+    "echo 'API DONS Backend ready for deployment'"
+]
+
+[start]
+cmd = "php -S 0.0.0.0:8000 -t ."

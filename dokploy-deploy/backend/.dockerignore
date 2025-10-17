@@ -1,0 +1,14 @@
+# Ignorer les fichiers inutiles pour le déploiement
+node_modules/
+.git/
+.gitignore
+README.md
+*.log
+.env
+.env.local
+.env.production
+.env.development
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp

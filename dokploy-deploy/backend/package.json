@@ -1,0 +1,23 @@
+{
+  "name": "dons-backend-api",
+  "version": "1.0.0",
+  "description": "API Backend pour l'application DONS avec intégration Barapay",
+  "main": "index.php",
+  "scripts": {
+    "start": "php -S 0.0.0.0:8000 -t .",
+    "dev": "php -S localhost:8000 -t .",
+    "test": "php -S localhost:8000 -t ."
+  },
+  "keywords": [
+    "php",
+    "api",
+    "barapay",
+    "payment",
+    "dons"
+  ],
+  "author": "DONS Team",
+  "license": "MIT",
+  "engines": {
+    "php": ">=8.0"
+  }
+}
