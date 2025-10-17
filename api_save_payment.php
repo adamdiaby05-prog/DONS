@@ -11,6 +11,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
+// Inclure l'intégration Barapay
+require_once 'barapay_payment_integration.php';
+
 // Configuration de la base de données PostgreSQL
 $host = 'localhost';
 $port = '5432';
@@ -42,6 +45,34 @@ try {
         // Générer une référence de paiement unique
         $payment_reference = 'PAY-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
         
+        // Vérifier si c'est un paiement Barapay
+        $is_barapay_payment = ($input['payment_method'] === 'barapay' || 
+                              $input['payment_method'] === 'Bpay' || 
+                              $input['payment_method'] === 'mobile_money');
+        
+        $checkout_url = null;
+        $barapay_reference = null;
+        
+        if ($is_barapay_payment) {
+            try {
+                // Créer un paiement Barapay
+                $orderNo = 'DONS_' . time() . '_' . rand(1000, 9999);
+                $paymentUrl = createBarapayPayment(
+                    $input['amount'],
+                    'XOF',
+                    $orderNo,
+                    'Bpay'
+                );
+                
+                $checkout_url = $paymentUrl;
+                $barapay_reference = $orderNo;
+                
+            } catch (Exception $e) {
+                // En cas d'erreur Barapay, continuer avec un paiement normal
+                error_log("Erreur Barapay: " . $e->getMessage());
+            }
+        }
+        
         // Préparer la requête d'insertion
         $sql = "INSERT INTO payments (
             contribution_id, 
@@ -72,11 +103,23 @@ try {
         // Valeurs par défaut
         $contribution_id = 1; // ID de contribution par défaut
         $status = $input['status'] ?? 'completed';
-        $gateway_response = json_encode([
+        
+        // Gateway response avec informations Barapay si applicable
+        $gateway_response_data = [
             'source' => 'Flutter App',
             'timestamp' => date('c'),
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown'
-        ]);
+        ];
+        
+        if ($is_barapay_payment && $checkout_url) {
+            $gateway_response_data['barapay'] = [
+                'checkout_url' => $checkout_url,
+                'reference' => $barapay_reference,
+                'integration' => 'Barapay SDK'
+            ];
+        }
+        
+        $gateway_response = json_encode($gateway_response_data);
         $processed_at = date('Y-m-d H:i:s');
         $created_at = date('Y-m-d H:i:s');
         $updated_at = date('Y-m-d H:i:s');
@@ -98,8 +141,8 @@ try {
         // Récupérer l'ID du paiement créé
         $payment_id = $stmt->fetchColumn();
         
-        // Réponse de succès
-        echo json_encode([
+        // Préparer la réponse
+        $response = [
             'success' => true,
             'message' => 'Paiement sauvegardé avec succès dans la base de données',
             'payment' => [
@@ -113,7 +156,17 @@ try {
             ],
             'database' => 'PostgreSQL connecté',
             'code' => '0000'
-        ]);
+        ];
+        
+        // Ajouter les informations Barapay si applicable
+        if ($is_barapay_payment && $checkout_url) {
+            $response['checkout_url'] = $checkout_url;
+            $response['barapay_reference'] = $barapay_reference;
+            $response['payment']['barapay_reference'] = $barapay_reference;
+        }
+        
+        // Réponse de succès
+        echo json_encode($response);
         
     } else {
         // Méthode non autorisée

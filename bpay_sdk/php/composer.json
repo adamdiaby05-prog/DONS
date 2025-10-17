@@ -1,0 +1,22 @@
+{
+    "name": "bpay/php-sdk",
+    "description": "SDK PHP officiel pour l'intégration de Bpay",
+    "type": "library",
+    "require": {
+        "php": "^8.2",
+        "ext-curl": "*",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Bpay\\": "src/Bpay/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Equipe Bpay",
+            "email": "contact@barapay.net"
+        }
+    ],
+    "minimum-stability": "stable"
+} 

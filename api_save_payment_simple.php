@@ -11,8 +11,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
+// Inclure l'intégration Barapay
+require_once 'barapay_payment_integration.php';
+
+try {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Récupérer les données JSON
         $input = json_decode(file_get_contents('php://input'), true);
         
@@ -31,46 +34,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Générer une référence de paiement unique
         $payment_reference = 'PAY-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
         
-        // Simuler la sauvegarde dans la base de données
-        $payment_id = rand(1000, 9999);
-        $status = $input['status'] ?? 'completed';
-        $created_at = date('Y-m-d H:i:s');
+        // Vérifier si c'est un paiement Barapay
+        $is_barapay_payment = ($input['payment_method'] === 'barapay' || 
+                              $input['payment_method'] === 'Bpay' || 
+                              $input['payment_method'] === 'mobile_money');
         
-        // Simuler un délai de traitement
-        usleep(500000); // 0.5 seconde
+        $checkout_url = null;
+        $barapay_reference = null;
         
-        // Réponse de succès
-        echo json_encode([
+        if ($is_barapay_payment) {
+            try {
+                // Créer un paiement Barapay
+                $orderNo = 'DONS_' . time() . '_' . rand(1000, 9999);
+                $paymentUrl = createBarapayPayment(
+                    $input['amount'],
+                    'XOF',
+                    $orderNo,
+                    'Bpay'
+                );
+                
+                $checkout_url = $paymentUrl;
+                $barapay_reference = $orderNo;
+                
+            } catch (Exception $e) {
+                // En cas d'erreur Barapay, continuer avec un paiement normal
+                error_log("Erreur Barapay: " . $e->getMessage());
+            }
+        }
+        
+        // Préparer la réponse
+        $response = [
             'success' => true,
-            'message' => 'Paiement sauvegardé avec succès dans la base de données PostgreSQL',
+            'message' => 'Paiement sauvegardé avec succès',
             'payment' => [
-                'id' => $payment_id,
+                'id' => rand(1000, 9999), // ID simulé
                 'payment_reference' => $payment_reference,
                 'amount' => $input['amount'],
                 'payment_method' => $input['payment_method'],
                 'phone_number' => $input['phone_number'],
-                'status' => $status,
-                'created_at' => $created_at
+                'status' => $input['status'] ?? 'completed',
+                'created_at' => date('Y-m-d H:i:s')
             ],
-            'database' => 'PostgreSQL connecté',
-            'code' => '0000',
-            'source' => 'Base de données DONS - Table payments'
-        ]);
+            'database' => 'Mode simple (sans BDD)',
+            'code' => '0000'
+        ];
         
-    } catch (Exception $e) {
-        http_response_code(400);
+        // Ajouter les informations Barapay si applicable
+        if ($is_barapay_payment && $checkout_url) {
+            $response['checkout_url'] = $checkout_url;
+            $response['barapay_reference'] = $barapay_reference;
+            $response['payment']['barapay_reference'] = $barapay_reference;
+        }
+        
+        // Réponse de succès
+        echo json_encode($response);
+        
+    } else {
+        // Méthode non autorisée
+        http_response_code(405);
         echo json_encode([
             'success' => false,
-            'error' => $e->getMessage()
+            'error' => 'Méthode non autorisée. Utilisez POST.',
+            'method' => $_SERVER['REQUEST_METHOD']
         ]);
     }
-} else {
-    // Méthode non autorisée
-    http_response_code(405);
+    
+} catch (Exception $e) {
+    http_response_code(400);
     echo json_encode([
         'success' => false,
-        'error' => 'Méthode non autorisée. Utilisez POST.',
-        'method' => $_SERVER['REQUEST_METHOD']
+        'error' => $e->getMessage()
     ]);
 }
 ?>

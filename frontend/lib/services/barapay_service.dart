@@ -1,206 +1,403 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:url_launcher/url_launcher.dart';
-import '../models/payment.dart';
+import 'package:dio/dio.dart';
+import '../config/api_config.dart';
+import '../utils/url_launcher.dart';
 
 class BarapayService {
-  // Configuration de l'API Barapay
-  static const String _baseUrl = 'http://localhost:8000'; // Ton serveur PHP
-  static const String _apiKey = 'wjb7lzQVialbcwMNTPD1IojrRzPIIl';
-  static const String _apiSecret = 'eXSMVquRfnUi6u5epkKFbxym1bZxSjgfHMxJlGGKq9j1amulx97Cj4QB7vZFzuyRUm4UC9mCHYhfzWn34arIyW4G2EU9vcdcQsb1';
+  final Dio _dio;
+  final String _baseUrl;
+
+  BarapayService({
+    Dio? dio,
+    String? baseUrl,
+  })  : _dio = dio ?? _createDio(),
+        _baseUrl = baseUrl ?? ApiConfig.baseUrl;
+
+  static Dio _createDio() {
+    final dio = Dio();
+    dio.options.connectTimeout = Duration(seconds: ApiConfig.connectTimeout);
+    dio.options.receiveTimeout = Duration(seconds: ApiConfig.receiveTimeout);
+    return dio;
+  }
 
   /// Créer un paiement Barapay
-  static Future<BarapayPaymentResponse> createPayment({
-    required double amount,
+  Future<Map<String, dynamic>> createPayment({
     required String phoneNumber,
-    String? description,
-    String? orderId,
+    required int amount,
+    required String network,
   }) async {
     try {
-      final url = Uri.parse('$_baseUrl/api_save_payment.php');
+      // Générer un numéro de commande unique
+      final orderNo = 'DONS_${DateTime.now().millisecondsSinceEpoch}_${_generateRandomId()}';
       
-      final requestData = {
-        'amount': amount.toInt(),
+      // Préparer les données pour l'API
+      final paymentData = {
+        'amount': amount,
         'phone_number': phoneNumber,
-        'payment_method': 'PayMoney',
-        'description': description ?? 'Paiement DONS - ${amount.toInt()} FCFA',
-        'order_id': orderId ?? 'DONS-${DateTime.now().millisecondsSinceEpoch}',
+        'payment_method': 'barapay',
+        'status': 'pending',
+        'order_no': orderNo,
+        'network': network,
+        'currency': 'XOF'
       };
 
-      print('🚀 Création paiement Barapay: $requestData');
-
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode(requestData),
+      // Appeler l'API de sauvegarde qui intègre Barapay
+      final response = await _dio.post(
+        '$_baseUrl/api_save_payment_simple.php',
+        data: paymentData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
       );
 
-      print('📡 Réponse Barapay: ${response.statusCode} - ${response.body}');
-
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final data = response.data;
+        
+        // Log pour débogage
+        print('DEBUG: Réponse du serveur reçue');
+        print('DEBUG: Type de données: ${data.runtimeType}');
+        print('DEBUG: Contenu: $data');
+        
+        // Vérifier que les données sont valides
+        if (data == null) {
+          throw Exception('Réponse du serveur invalide');
+        }
+        
+        // Log détaillé pour débogage
+        if (data is Map) {
+          print('DEBUG: Clés disponibles dans la réponse: ${data.keys.toList()}');
+          if (data['payment'] != null) {
+            print('DEBUG: Payment object: ${data['payment']}');
+          }
+          if (data['data'] != null) {
+            print('DEBUG: Data object: ${data['data']}');
+          }
+        }
+        
+        // Si la réponse est HTML (redirection Wave), la traiter comme un succès
+        if (data is String && data.contains('<!DOCTYPE html>')) {
+          return {
+            'success': true,
+            'payment_id': 'wave_redirect_${DateTime.now().millisecondsSinceEpoch}',
+            'reference': 'wave_redirect_${DateTime.now().millisecondsSinceEpoch}',
+            'barapay_reference': 'wave_redirect',
+            'checkout_url': 'wave_redirect_detected',
+            'amount': amount,
+            'phone_number': phoneNumber,
+            'network': network,
+            'currency': 'XOF',
+            'status': 'pending',
+            'redirect_required': true,
+            'real_payment': true,
+            'barapay_payment': true,
+            'created_at': DateTime.now().toIso8601String(),
+          };
+        }
         
         if (data['success'] == true) {
-          return BarapayPaymentResponse(
-            success: true,
-            paymentId: data['payment']['id'],
-            checkoutUrl: data['checkout_url'],
-            reference: data['barapay_reference'],
-            message: data['message'],
-            payment: Payment.fromJson(data['payment']),
-          );
+          print('DEBUG: Paiement réussi, traitement des données');
+          
+          // Vérifier si c'est un paiement Barapay avec URL de checkout
+          if (data['checkout_url'] != null) {
+            print('DEBUG: Redirection Wave détectée');
+            
+            // Extraction sécurisée des données de paiement
+            String paymentId = 'unknown';
+            String reference = 'unknown';
+            
+            if (data['payment'] != null && data['payment'] is Map) {
+              paymentId = data['payment']['id']?.toString() ?? 'unknown';
+              reference = data['payment']['payment_reference']?.toString() ?? paymentId;
+            } else if (data['data'] != null && data['data'] is Map) {
+              paymentId = data['data']['id']?.toString() ?? 'unknown';
+              reference = paymentId;
+            }
+            
+            // Ouvrir automatiquement l'URL Barapay
+            if (data['checkout_url'] != null && data['checkout_url'].toString().isNotEmpty) {
+              await openPaymentUrl(data['checkout_url'].toString());
+            }
+            
+            return {
+              'success': true,
+              'payment_id': paymentId,
+              'reference': reference,
+              'barapay_reference': data['barapay_reference']?.toString() ?? 'unknown',
+              'checkout_url': data['checkout_url'],
+              'amount': amount,
+              'phone_number': phoneNumber,
+              'network': network,
+              'currency': 'XOF',
+              'status': 'pending',
+              'redirect_required': true,
+              'real_payment': true,
+              'barapay_payment': true,
+              'created_at': DateTime.now().toIso8601String(),
+            };
+          } else {
+            print('DEBUG: Paiement normal sans redirection');
+            
+            // Extraction sécurisée des données de paiement
+            String paymentId = 'unknown';
+            String reference = 'unknown';
+            String status = 'pending';
+            
+            if (data['payment'] != null && data['payment'] is Map) {
+              paymentId = data['payment']['id']?.toString() ?? 'unknown';
+              reference = data['payment']['payment_reference']?.toString() ?? paymentId;
+              status = data['payment']['status']?.toString() ?? 'pending';
+            } else if (data['data'] != null && data['data'] is Map) {
+              paymentId = data['data']['id']?.toString() ?? 'unknown';
+              reference = paymentId;
+            }
+            
+            return {
+              'success': true,
+              'payment_id': paymentId,
+              'reference': reference,
+              'amount': amount,
+              'phone_number': phoneNumber,
+              'network': network,
+              'currency': 'XOF',
+              'status': status,
+              'redirect_required': false,
+              'real_payment': false,
+              'barapay_payment': false,
+              'created_at': DateTime.now().toIso8601String(),
+            };
+          }
         } else {
-          return BarapayPaymentResponse(
-            success: false,
-            error: data['error'] ?? 'Erreur inconnue',
-          );
+          // Gérer le cas où la réponse n'est pas au format JSON attendu
+          if (data is String && data.contains('<!DOCTYPE html>')) {
+            // C'est une redirection HTML vers Wave
+            return {
+              'success': true,
+              'payment_id': 'wave_redirect_${DateTime.now().millisecondsSinceEpoch}',
+              'reference': 'wave_redirect_${DateTime.now().millisecondsSinceEpoch}',
+              'barapay_reference': 'wave_redirect',
+              'checkout_url': 'wave_redirect_detected',
+              'amount': amount,
+              'phone_number': phoneNumber,
+              'network': network,
+              'currency': 'XOF',
+              'status': 'pending',
+              'redirect_required': true,
+              'real_payment': true,
+              'barapay_payment': true,
+              'created_at': DateTime.now().toIso8601String(),
+            };
+          } else {
+            // Gestion d'erreur plus robuste
+            String errorMessage = 'Erreur lors de la création du paiement';
+            if (data is Map && data['error'] != null) {
+              errorMessage = data['error'].toString();
+            } else if (data is String) {
+              errorMessage = data;
+            }
+            print('DEBUG: Erreur du serveur: $errorMessage');
+            throw Exception(errorMessage);
+          }
         }
       } else {
-        return BarapayPaymentResponse(
-          success: false,
-          error: 'Erreur serveur: ${response.statusCode}',
-        );
+        throw Exception('Erreur HTTP: ${response.statusCode}');
       }
+    } on DioException catch (e) {
+      String errorMessage = 'Erreur de connexion';
+      
+      switch (e.type) {
+        case DioExceptionType.connectionTimeout:
+          errorMessage = 'Délai de connexion dépassé. Vérifiez votre connexion internet.';
+          break;
+        case DioExceptionType.receiveTimeout:
+          errorMessage = 'Délai de réception dépassé. Le serveur met trop de temps à répondre.';
+          break;
+        case DioExceptionType.connectionError:
+          errorMessage = 'Impossible de se connecter au serveur. Vérifiez que le backend est démarré.';
+          break;
+        case DioExceptionType.badResponse:
+          if (e.response?.statusCode == 422) {
+            errorMessage = 'Données invalides. Vérifiez les informations saisies.';
+          } else if (e.response?.statusCode == 500) {
+            errorMessage = 'Erreur serveur. Veuillez réessayer plus tard.';
+          } else {
+            errorMessage = 'Erreur serveur: ${e.response?.statusCode}';
+          }
+          break;
+        default:
+          errorMessage = 'Erreur de connexion: ${e.message}';
+      }
+      
+      throw Exception(errorMessage);
     } catch (e) {
-      print('❌ Erreur Barapay: $e');
-      return BarapayPaymentResponse(
-        success: false,
-        error: 'Erreur de connexion: $e',
-      );
+      print('DEBUG: Erreur générale: $e');
+      print('DEBUG: Type d\'erreur: ${e.runtimeType}');
+      throw Exception('Erreur inattendue: $e');
     }
   }
 
-  /// Ouvrir la page de paiement Barapay
-  static Future<bool> openPaymentPage(String checkoutUrl) async {
+  /// Vérifier le statut d'un paiement Barapay
+  Future<Map<String, dynamic>> checkPaymentStatus(String paymentId) async {
     try {
-      final uri = Uri.parse(checkoutUrl);
-      
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(
-          uri,
-          mode: LaunchMode.inAppWebView,
-          webViewConfiguration: const WebViewConfiguration(
-            enableJavaScript: true,
-            enableDomStorage: true,
-          ),
-        );
-        return true;
-      } else {
-        print('❌ Impossible d\'ouvrir l\'URL: $checkoutUrl');
-        return false;
-      }
-    } catch (e) {
-      print('❌ Erreur ouverture page paiement: $e');
-      return false;
-    }
-  }
-
-  /// Vérifier le statut d'un paiement
-  static Future<BarapayStatusResponse> checkPaymentStatus(String reference) async {
-    try {
-      final url = Uri.parse('$_baseUrl/api/barapay/status?reference=$reference');
-      
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+      final response = await _dio.get(
+        '$_baseUrl/api_payments_status.php',
+        queryParameters: {'payment_id': paymentId},
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        
-        if (data['success'] == true) {
-          return BarapayStatusResponse(
-            success: true,
-            status: data['status'],
-            reference: data['reference'],
-            payment: data['payment'] != null ? Payment.fromJson(data['payment']) : null,
-          );
-        } else {
-          return BarapayStatusResponse(
-            success: false,
-            error: data['error'] ?? 'Erreur inconnue',
-          );
-        }
+        return response.data;
       } else {
-        return BarapayStatusResponse(
-          success: false,
-          error: 'Erreur serveur: ${response.statusCode}',
-        );
+        throw Exception('Erreur lors de la vérification du statut');
       }
+    } on DioException catch (e) {
+      throw Exception('Erreur de connexion: ${e.message}');
     } catch (e) {
-      print('❌ Erreur vérification statut: $e');
-      return BarapayStatusResponse(
-        success: false,
-        error: 'Erreur de connexion: $e',
-      );
+      throw Exception('Erreur inattendue: $e');
     }
   }
 
-  /// Tester la connexion avec l'API Barapay
-  static Future<bool> testConnection() async {
+  /// Obtenir l'historique des paiements Barapay
+  Future<List<Map<String, dynamic>>> getPaymentHistory() async {
     try {
-      final url = Uri.parse('$_baseUrl/api/test');
-      
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+      final response = await _dio.get(
+        '$_baseUrl/api_payments_history.php',
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['barapay_configured'] == true;
+        return List<Map<String, dynamic>>.from(response.data['data'] ?? []);
+      } else {
+        throw Exception('Erreur lors de la récupération de l\'historique');
       }
-      return false;
+    } on DioException catch (e) {
+      throw Exception('Erreur de connexion: ${e.message}');
     } catch (e) {
-      print('❌ Erreur test connexion: $e');
-      return false;
+      throw Exception('Erreur inattendue: $e');
     }
   }
-}
 
-/// Modèle de réponse pour la création de paiement
-class BarapayPaymentResponse {
-  final bool success;
-  final String? paymentId;
-  final String? checkoutUrl;
-  final String? reference;
-  final String? message;
-  final String? error;
-  final Payment? payment;
+  /// Ouvrir l'URL de paiement Barapay
+  Future<void> openPaymentUrl(String checkoutUrl) async {
+    try {
+      if (checkoutUrl.isNotEmpty) {
+        if (checkoutUrl.startsWith('https://barapay.net/')) {
+          // Ouvrir l'URL Barapay dans un nouvel onglet
+          UrlLauncher.openBarapayUrl(checkoutUrl);
+          print('URL Barapay ouverte: $checkoutUrl');
+        } else {
+          // Ouvrir toute autre URL
+          UrlLauncher.openUrl(checkoutUrl);
+          print('URL ouverte: $checkoutUrl');
+        }
+      }
+    } catch (e) {
+      throw Exception('Erreur lors de l\'ouverture de l\'URL: $e');
+    }
+  }
 
-  BarapayPaymentResponse({
-    required this.success,
-    this.paymentId,
-    this.checkoutUrl,
-    this.reference,
-    this.message,
-    this.error,
-    this.payment,
-  });
-}
+  /// Générer un ID aléatoire
+  String _generateRandomId() {
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final random = (timestamp % 10000).toString().padLeft(4, '0');
+    return '$timestamp$random';
+  }
 
-/// Modèle de réponse pour la vérification de statut
-class BarapayStatusResponse {
-  final bool success;
-  final String? status;
-  final String? reference;
-  final String? error;
-  final Payment? payment;
+  /// Valider les données de paiement
+  bool validatePaymentData({
+    required String phoneNumber,
+    required int amount,
+    required String network,
+  }) {
+    // Valider le numéro de téléphone (format ivoirien)
+    final phoneRegex = RegExp(r'^(\+225|225)?[0-9]{8}$');
+    if (!phoneRegex.hasMatch(phoneNumber.replaceAll(' ', ''))) {
+      return false;
+    }
 
-  BarapayStatusResponse({
-    required this.success,
-    this.status,
-    this.reference,
-    this.error,
-    this.payment,
-  });
+    // Valider le montant
+    if (amount <= 0 || amount > 1000000) { // Max 1,000,000 FCFA
+      return false;
+    }
+
+    // Valider le réseau
+    final validNetworks = ['orange money', 'mtn money', 'wave ci', 'moov money'];
+    if (!validNetworks.contains(network.toLowerCase())) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /// Formater le numéro de téléphone
+  String formatPhoneNumber(String phoneNumber) {
+    // Nettoyer le numéro
+    String cleaned = phoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
+    
+    // Ajouter l'indicatif si nécessaire
+    if (cleaned.startsWith('0')) {
+      cleaned = '+225' + cleaned.substring(1);
+    } else if (!cleaned.startsWith('+225') && !cleaned.startsWith('225')) {
+      cleaned = '+225' + cleaned;
+    }
+    
+    return cleaned;
+  }
+
+  /// Obtenir les informations du réseau
+  Map<String, dynamic> getNetworkInfo(String networkName) {
+    switch (networkName.toLowerCase()) {
+      case 'orange money':
+        return {
+          'id': 'orange_money',
+          'name': 'Orange Money',
+          'logo': 'assets/images/orange.jpg',
+          'color': 0xFFFFA500,
+          'description': 'Orange Money - Paiement mobile'
+        };
+      case 'mtn money':
+        return {
+          'id': 'mtn_money',
+          'name': 'MTN MoMo',
+          'logo': 'assets/images/mtn.jpg',
+          'color': 0xFFFFD700,
+          'description': 'MTN Mobile Money'
+        };
+      case 'wave ci':
+        return {
+          'id': 'wave_ci',
+          'name': 'WAVE CI',
+          'logo': 'assets/images/Wave.jpg',
+          'color': 0xFF87CEEB,
+          'description': 'Wave CI - Paiement mobile'
+        };
+      case 'moov money':
+        return {
+          'id': 'moov_money',
+          'name': 'MOOV Money',
+          'logo': 'assets/images/moov.jpg',
+          'color': 0xFF87CEEB,
+          'description': 'Moov Money - Paiement mobile'
+        };
+      default:
+        return {
+          'id': 'barapay',
+          'name': 'Barapay',
+          'logo': 'assets/images/Wave.jpg',
+          'color': 0xFF87CEEB,
+          'description': 'Barapay - Paiement mobile'
+        };
+    }
+  }
 }

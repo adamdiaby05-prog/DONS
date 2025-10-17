@@ -12,13 +12,13 @@ void configureEnvironment() {
   // Décommentez la ligne correspondante à votre environnement :
   
   // Pour le développement local (votre ordinateur)
-  // EnvironmentConfig.setEnvironment(Environment.local);
+  EnvironmentConfig.setEnvironment(Environment.local);
   
   // Pour l'émulateur Android
   // EnvironmentConfig.setEnvironment(Environment.emulator);
   
   // Pour le réseau local (appareil mobile physique)
-  EnvironmentConfig.setEnvironment(Environment.localNetwork);
+  // EnvironmentConfig.setEnvironment(Environment.localNetwork);
   
   // Pour le serveur de production
   // EnvironmentConfig.setEnvironment(Environment.server);

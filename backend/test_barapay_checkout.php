@@ -33,3 +33,4 @@ echo json_encode([
     'note' => 'Cette URL devrait fonctionner selon la documentation Barapay'
 ]);
 ?>
+

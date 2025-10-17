@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/payment_service.dart';
-import '../../services/barapay_service.dart';
-import '../../widgets/client/barapay_button.dart';
-import '../../models/barapay_payment.dart';
 
 class PaymentConfirmationScreen extends StatefulWidget {
   const PaymentConfirmationScreen({super.key});
@@ -18,8 +15,6 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
   bool _isCompleted = false;
   String? _error;
   Map<String, dynamic>? _paymentResult;
-  bool _useBarapay = true; // Par défaut, utiliser Barapay
-  bool _isBarapayConnected = false;
 
   late String _network;
   late String _phoneNumber;
@@ -40,99 +35,16 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
       _phoneNumber = '';
       _amount = 0.0;
     }
-    
-    // Vérifier la connexion Barapay
-    _checkBarapayConnection();
-  }
-
-  Future<void> _checkBarapayConnection() async {
-    final isConnected = await BarapayService.testConnection();
-    setState(() {
-      _isBarapayConnected = isConnected;
-    });
   }
 
   Future<void> _processPayment() async {
-    if (_useBarapay && _isBarapayConnected) {
-      await _processBarapayPayment();
-    } else {
-      await _processTraditionalPayment();
-    }
-  }
-
-  Future<void> _processBarapayPayment() async {
     setState(() {
       _isProcessing = true;
       _error = null;
     });
 
     try {
-      final response = await BarapayService.createPayment(
-        amount: _amount,
-        phoneNumber: _phoneNumber,
-        description: 'Don DONS - ${_amount.toInt()} FCFA',
-        orderId: 'DONS-${DateTime.now().millisecondsSinceEpoch}',
-      );
-
-      if (response.success && response.checkoutUrl != null) {
-        // Ouvrir la page de paiement Barapay
-        final success = await BarapayService.openPaymentPage(response.checkoutUrl!);
-        
-        if (success) {
-          setState(() {
-            _paymentResult = {
-              'transactionId': response.paymentId,
-              'status': 'pending',
-              'network': 'Barapay',
-              'phoneNumber': _phoneNumber,
-              'amount': _amount,
-              'timestamp': DateTime.now().toIso8601String(),
-              'barapay_reference': response.reference,
-              'checkout_url': response.checkoutUrl,
-            };
-            _isCompleted = true;
-            _isProcessing = false;
-          });
-
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Page de paiement Barapay ouverte !'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          }
-        } else {
-          throw Exception('Impossible d\'ouvrir la page de paiement');
-        }
-      } else {
-        throw Exception(response.error ?? 'Erreur lors de la création du paiement');
-      }
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isProcessing = false;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur Barapay: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _processTraditionalPayment() async {
-    setState(() {
-      _isProcessing = true;
-      _error = null;
-    });
-
-    try {
-      // Simuler le traitement du paiement traditionnel
+      // Simuler le traitement du paiement
       await Future.delayed(const Duration(seconds: 2));
       
       // Créer un résultat simulé
@@ -380,243 +292,30 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
             
             const SizedBox(height: 30),
             
-            // Sélection du mode de paiement
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey[200]!),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Mode de paiement',
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF333333),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  
-                  // Option Barapay
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _useBarapay = true;
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(15),
-                      decoration: BoxDecoration(
-                        color: _useBarapay ? const Color(0xFF4CAF50).withOpacity(0.1) : Colors.grey[50],
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _useBarapay ? const Color(0xFF4CAF50) : Colors.grey[300]!,
-                          width: 2,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF4CAF50),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.payment,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 15),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Barapay (Recommandé)',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF333333),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Paiement sécurisé et instantané',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                                if (_isBarapayConnected)
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.check_circle, color: Colors.green, size: 16),
-                                      const SizedBox(width: 5),
-                                      Text(
-                                        'Connecté',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 12,
-                                          color: Colors.green[700],
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                else
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.warning, color: Colors.orange, size: 16),
-                                      const SizedBox(width: 5),
-                                      Text(
-                                        'Service indisponible',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 12,
-                                          color: Colors.orange[700],
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                              ],
-                            ),
-                          ),
-                          Radio<bool>(
-                            value: true,
-                            groupValue: _useBarapay,
-                            onChanged: (value) {
-                              setState(() {
-                                _useBarapay = value ?? true;
-                              });
-                            },
-                            activeColor: const Color(0xFF4CAF50),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 15),
-                  
-                  // Option traditionnel
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _useBarapay = false;
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(15),
-                      decoration: BoxDecoration(
-                        color: !_useBarapay ? const Color(0xFF1e3a8a).withOpacity(0.1) : Colors.grey[50],
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: !_useBarapay ? const Color(0xFF1e3a8a) : Colors.grey[300]!,
-                          width: 2,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1e3a8a),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.phone_android,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 15),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Paiement traditionnel',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF333333),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'SMS de confirmation requis',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Radio<bool>(
-                            value: false,
-                            groupValue: _useBarapay,
-                            onChanged: (value) {
-                              setState(() {
-                                _useBarapay = value ?? false;
-                              });
-                            },
-                            activeColor: const Color(0xFF1e3a8a),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 20),
-            
             // Message d'information
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: _useBarapay 
-                    ? const Color(0xFF4CAF50).withOpacity(0.1)
-                    : const Color(0xFF1e3a8a).withOpacity(0.1),
+                color: const Color(0xFF1e3a8a).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: _useBarapay 
-                      ? const Color(0xFF4CAF50).withOpacity(0.3)
-                      : const Color(0xFF1e3a8a).withOpacity(0.3),
+                  color: const Color(0xFF1e3a8a).withOpacity(0.3),
                 ),
               ),
               child: Row(
                 children: [
                   Icon(
                     Icons.info_outline,
-                    color: _useBarapay ? const Color(0xFF4CAF50) : const Color(0xFF1e3a8a),
+                    color: const Color(0xFF1e3a8a),
                     size: 24,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      _useBarapay 
-                          ? 'Paiement sécurisé et instantané avec Barapay. Aucun SMS requis.'
-                          : 'Vous recevrez un SMS de confirmation de votre réseau mobile pour valider le paiement.',
+                      'Vous recevrez un SMS de confirmation de votre réseau mobile pour valider le paiement.',
                       style: GoogleFonts.poppins(
                         fontSize: 14,
-                        color: _useBarapay ? const Color(0xFF4CAF50) : const Color(0xFF1e3a8a),
+                        color: const Color(0xFF1e3a8a),
                       ),
                     ),
                   ),
@@ -634,7 +333,7 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
                 child: ElevatedButton(
                   onPressed: _isProcessing ? null : _processPayment,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _useBarapay ? const Color(0xFF4CAF50) : const Color(0xFFb22222),
+                    backgroundColor: const Color(0xFFb22222),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -650,24 +349,12 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
                             strokeWidth: 2,
                           ),
                         )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              _useBarapay ? Icons.payment : Icons.phone_android,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              _useBarapay 
-                                  ? 'Payer avec Barapay'
-                                  : 'Confirmer le paiement',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
+                      : Text(
+                          'Confirmer le paiement',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                 ),
               ),
@@ -677,57 +364,36 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: _useBarapay ? Colors.green[50] : Colors.blue[50],
+                  color: Colors.green[50],
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: _useBarapay ? Colors.green[200]! : Colors.blue[200]!,
+                    color: Colors.green[200]!,
                   ),
                 ),
                 child: Column(
                   children: [
                     Icon(
-                      _useBarapay ? Icons.payment : Icons.check_circle,
-                      color: _useBarapay ? Colors.green[600] : Colors.blue[600],
+                      Icons.check_circle,
+                      color: Colors.green[600],
                       size: 48,
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      _useBarapay 
-                          ? 'Page de paiement Barapay ouverte !'
-                          : 'Paiement traité !',
+                      'Paiement traité !',
                       style: GoogleFonts.poppins(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: _useBarapay ? Colors.green[800] : Colors.blue[800],
+                        color: Colors.green[800],
                       ),
                     ),
                     const SizedBox(height: 8),
-                    if (_useBarapay) ...[
-                      Text(
-                        'Référence Barapay: ${_paymentResult?['barapay_reference'] ?? 'N/A'}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: Colors.green[700],
-                        ),
+                    Text(
+                      'Référence: ${_paymentResult?['reference'] ?? 'N/A'}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: Colors.green[700],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Terminez le paiement dans la page ouverte',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: Colors.green[600],
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ] else ...[
-                      Text(
-                        'Référence: ${_paymentResult?['transactionId'] ?? 'N/A'}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: Colors.blue[700],
-                        ),
-                      ),
-                    ],
+                    ),
                   ],
                 ),
               ),

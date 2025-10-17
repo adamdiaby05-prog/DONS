@@ -12,7 +12,7 @@ class EnvironmentConfig {
   static String get baseUrl {
     switch (currentEnvironment) {
       case Environment.local:
-        return 'http://localhost:8000'; // localhost pour développement web
+        return 'http://localhost:8000'; // localhost pour le développement
       case Environment.localNetwork:
         return 'http://192.168.100.7:8000'; // Utiliser l'IP correcte du réseau local
       case Environment.emulator:

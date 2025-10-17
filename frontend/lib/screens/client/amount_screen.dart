@@ -109,11 +109,16 @@ class _AmountScreenState extends State<AmountScreen> {
       );
 
       if (mounted) {
+        // Vérifier que le résultat du paiement n'est pas null
+        if (paymentResult == null) {
+          throw Exception('Réponse du service de paiement invalide');
+        }
+        
         // Vérifier si c'est un paiement Barapay avec redirection
         if (paymentResult['redirect_required'] == true && paymentResult['checkout_url'] != null) {
           // C'est un paiement Barapay RÉEL - rediriger vers l'URL de checkout
           final checkoutUrl = paymentResult['checkout_url'];
-          final reference = paymentResult['reference'] ?? paymentResult['id'] ?? 'N/A';
+          final reference = paymentResult['reference']?.toString() ?? paymentResult['id']?.toString() ?? 'N/A';
           
           // Afficher une boîte de dialogue pour confirmer la redirection
           showDialog(

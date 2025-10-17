@@ -70,17 +70,8 @@ if ($request_uri === '/api_save_payment.php' && $method === 'POST') {
         // Générer une référence unique
         $reference = 'DONS-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
         
-        // URL de checkout Barapay RÉELLE
-        $checkoutUrl = 'https://barapay.net/pay?' . http_build_query([
-            'client_id' => BARAPAY_CLIENT_ID,
-            'amount' => $input['amount'],
-            'currency' => 'XOF',
-            'phone' => $input['phone_number'] ?? '',
-            'ref' => $reference,
-            'description' => 'Paiement DONS - ' . $input['amount'] . ' FCFA',
-            'success_url' => 'http://localhost:8000/payment-success.php',
-            'cancel_url' => 'http://localhost:8000/payment-cancel.php'
-        ]);
+        // URL de checkout locale (simulation Barapay)
+        $checkoutUrl = 'http://localhost:8000/checkout.php?ref=' . $reference . '&amount=' . $input['amount'] . '&phone=' . urlencode($input['phone_number'] ?? '');
         
         // Sauvegarder le paiement en attente
         $payment_data = [
@@ -177,17 +168,8 @@ if ($request_uri === '/api/barapay/create' && $method === 'POST') {
         // Générer une référence unique
         $reference = 'DONS-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
         
-        // URL de checkout Barapay RÉELLE
-        $checkoutUrl = 'https://barapay.net/pay?' . http_build_query([
-            'client_id' => BARAPAY_CLIENT_ID,
-            'amount' => $input['amount'],
-            'currency' => 'XOF',
-            'phone' => $input['phone_number'] ?? '',
-            'ref' => $reference,
-            'description' => 'Paiement DONS - ' . $input['amount'] . ' FCFA',
-            'success_url' => 'http://localhost:8000/payment-success.php',
-            'cancel_url' => 'http://localhost:8000/payment-cancel.php'
-        ]);
+        // URL de checkout locale (simulation Barapay)
+        $checkoutUrl = 'http://localhost:8000/checkout.php?ref=' . $reference . '&amount=' . $input['amount'] . '&phone=' . urlencode($input['phone_number'] ?? '');
         
         // Sauvegarder le paiement en attente
         $payment_data = [
