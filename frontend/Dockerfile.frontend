@@ -1,0 +1,28 @@
+# Dockerfile pour le Frontend Flutter DONS
+FROM node:18-alpine
+
+# Installer Flutter
+RUN apk add --no-cache git curl unzip xz-utils zip
+RUN git clone https://github.com/flutter/flutter.git -b stable /flutter
+ENV PATH="/flutter/bin:/flutter/bin/cache/dart-sdk/bin:${PATH}"
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Copier les fichiers de l'application
+COPY . .
+
+# Aller dans le dossier frontend
+WORKDIR /app/frontend
+
+# Installer les dépendances Flutter
+RUN flutter pub get
+
+# Construire l'application Flutter pour le web
+RUN flutter build web --release
+
+# Exposer le port 3000
+EXPOSE 3000
+
+# Démarrer le serveur
+CMD ["cd", "build/web", "&&", "python", "-m", "http.server", "3000"]
