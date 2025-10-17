@@ -2,16 +2,21 @@
   "name": "dons-frontend",
   "version": "1.0.0",
   "description": "Frontend Flutter pour l'application DONS",
+  "main": "index.js",
   "scripts": {
+    "start": "cd build/web && python -m http.server 3000",
     "build": "flutter build web --release",
-    "dev": "flutter run -d web-server --web-port 3000",
-    "install": "flutter pub get"
+    "dev": "flutter run -d web-server --web-port 3000"
   },
-  "dependencies": {
-    "flutter": "^3.0.0"
-  },
-  "devDependencies": {},
+  "keywords": [
+    "flutter",
+    "web",
+    "dons",
+    "cotisations"
+  ],
+  "author": "DONS Team",
+  "license": "MIT",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=16.0.0"
   }
 }

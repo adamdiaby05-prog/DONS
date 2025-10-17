@@ -1,18 +1,17 @@
+# Configuration Nixpacks pour le Frontend Flutter
 [phases.setup]
-nixPkgs = ["flutter", "python3"]
+nixPkgs = ["nodejs", "npm"]
 
 [phases.install]
 cmds = [
-  "cd . && flutter config --no-analytics",
-  "cd . && cp pubspec-ultra-simple.yaml pubspec.yaml",
-  "cd . && flutter pub get"
+    "npm install -g @flutter/cli",
+    "flutter pub get"
 ]
 
 [phases.build]
 cmds = [
-  "cd . && flutter build web --release --web-renderer html",
-  "cd . && chmod +x setup-complete.sh && ./setup-complete.sh"
+    "flutter build web --release"
 ]
 
 [start]
-cmd = "cd build/web && python3 static-server.py"
+cmd = "cd build/web && python -m http.server 3000"
