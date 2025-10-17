@@ -1,0 +1,15 @@
+[phases.setup]
+nixPkgs = ["flutter", "nginx"]
+
+[phases.install]
+cmds = [
+  "cd frontend && flutter pub get"
+]
+
+[phases.build]
+cmds = [
+  "cd frontend && flutter build web --release"
+]
+
+[start]
+cmd = "cd frontend/build/web && python3 -m http.server 80"
