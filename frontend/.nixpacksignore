@@ -1,0 +1,12 @@
+# Ignorer les fichiers inutiles pour le build Flutter
+*.log
+.git/
+node_modules/
+.dart_tool/
+build/
+android/
+ios/
+linux/
+macos/
+windows/
+test/

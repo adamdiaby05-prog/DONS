@@ -1,15 +1,11 @@
-# Ignore development files only
-.env
-.env.example
+# Ignorer les dossiers problématiques pour Nixpacks
+Nouveau dossier/
+paymoney_sdk/
+bpay_sdk/
+backend/
+dokploy-deploy/
+*.log
 .git/
-.gitignore
-*.md
-*.bat
-*.sh
-
-# Ignore test files
-tests/
-phpunit.xml
-
-# Ignore build artifacts (but keep frontend build)
-storage/*.log
+node_modules/
+build/
+.dart_tool/
