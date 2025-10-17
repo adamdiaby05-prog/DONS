@@ -32,6 +32,9 @@ WORKDIR /app
 # Vérifier que nous sommes dans le bon répertoire
 RUN ls -la
 
+# Vérifier que le pubspec.yaml existe
+RUN ls -la pubspec.yaml
+
 # Installer les dépendances Flutter
 RUN flutter pub get
 
