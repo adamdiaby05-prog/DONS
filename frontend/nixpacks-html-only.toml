@@ -1,0 +1,15 @@
+[phases.setup]
+nixPkgs = ["python3"]
+
+[phases.install]
+cmds = [
+  "echo 'Installation des dépendances Python...'"
+]
+
+[phases.build]
+cmds = [
+  "cd . && chmod +x setup-complete.sh && ./setup-complete.sh"
+]
+
+[start]
+cmd = "cd . && python3 static-server.py"
