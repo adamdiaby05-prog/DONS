@@ -1,0 +1,15 @@
+[phases.setup]
+nixPkgs = ["flutter", "nginx"]
+
+[phases.install]
+cmds = [
+  "flutter pub get"
+]
+
+[phases.build]
+cmds = [
+  "flutter build web --release"
+]
+
+[start]
+cmd = "cd build/web && python3 -m http.server 80"
