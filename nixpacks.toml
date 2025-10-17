@@ -1,19 +1,21 @@
 [phases.setup]
-nixPkgs = ["flutter", "nodejs_18", "npm-9_x"]
+nixPkgs = ["php", "phpPackages.composer", "nginx"]
 
 [phases.install]
 cmds = [
-  "cd frontend && flutter pub get",
-  "cd frontend && npm install"
+  "cd 'Nouveau dossier/paymoney_sdk(1)/bpay_sdk/php' && composer install --ignore-platform-reqs --no-dev --optimize-autoloader"
 ]
 
 [phases.build]
 cmds = [
-  "cd frontend && flutter build web --release --web-renderer html",
-  "mkdir -p /app/frontend-deploy",
-  "cp -r /app/frontend/build/web/* /app/frontend-deploy/",
-  "cp /app/frontend/static-server.py /app/frontend-deploy/"
+  "mkdir -p /app/bpay-deploy",
+  "cp -r /app/'Nouveau dossier/paymoney_sdk(1)/bpay_sdk/php'/* /app/bpay-deploy/",
+  "cp /app/barapay_payment_integration.php /app/bpay-deploy/",
+  "cp /app/api_payments_*.php /app/bpay-deploy/",
+  "cp /app/payment_*.php /app/bpay-deploy/",
+  "cp /app/test_*.php /app/bpay-deploy/",
+  "echo '<?php phpinfo(); ?>' > /app/bpay-deploy/info.php"
 ]
 
 [start]
-cmd = "cd /app/frontend-deploy && python3 static-server.py"
+cmd = "cd /app/bpay-deploy && php -S 0.0.0.0:80"
