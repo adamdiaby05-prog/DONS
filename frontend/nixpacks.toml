@@ -1,15 +1,16 @@
 [phases.setup]
-nixPkgs = ["flutter", "nginx"]
+nixPkgs = ["flutter", "python3"]
 
 [phases.install]
 cmds = [
-  "flutter pub get"
+  "cd . && flutter pub get"
 ]
 
 [phases.build]
 cmds = [
-  "flutter build web --release"
+  "cd . && flutter build web --release --web-renderer html",
+  "cd . && chmod +x setup-complete.sh && ./setup-complete.sh"
 ]
 
 [start]
-cmd = "cd build/web && python3 -m http.server 80"
+cmd = "cd build/web && python3 static-server.py"
