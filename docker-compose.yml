@@ -8,36 +8,37 @@ services:
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
-      - DB_CONNECTION=sqlite
-      - DB_DATABASE=/var/www/html/backend/database/database.sqlite
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=dons
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=your_postgres_password
     volumes:
-      - ./backend/database:/var/www/html/backend/database
       - ./backend/storage:/var/www/html/backend/storage
     depends_on:
-      - db
+      - postgres
 
-  db:
-    image: mysql:8.0
+  postgres:
+    image: postgres:15
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: dons_db
-      MYSQL_USER: dons_user
-      MYSQL_PASSWORD: dons_password
+      POSTGRES_DB: dons
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: your_postgres_password
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
 
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
+  pgadmin:
+    image: dpage/pgadmin4
     environment:
-      PMA_HOST: db
-      PMA_USER: dons_user
-      PMA_PASSWORD: dons_password
+      PGADMIN_DEFAULT_EMAIL: admin@dons.com
+      PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "8080:80"
     depends_on:
-      - db
+      - postgres
 
 volumes:
-  mysql_data:
+  postgres_data:

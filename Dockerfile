@@ -10,9 +10,8 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     zip \
     unzip \
-    sqlite3 \
-    libsqlite3-dev \
-    && docker-php-ext-install pdo_mysql pdo_sqlite mbstring exif pcntl bcmath gd
+    libpq-dev \
+    && docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd
 
 # Installer Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -36,13 +35,9 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
 RUN a2enmod rewrite
 COPY .htaccess /var/www/html/.htaccess
 
-# Créer le fichier de base de données SQLite
-RUN touch /var/www/html/backend/database/database.sqlite
-
 # Donner les permissions appropriées
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html \
-    && chmod 664 /var/www/html/backend/database/database.sqlite
+    && chmod -R 755 /var/www/html
 
 # Exposer le port 80
 EXPOSE 80
