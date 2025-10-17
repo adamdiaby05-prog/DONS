@@ -3,6 +3,7 @@ nixPkgs = ["flutter", "python3"]
 
 [phases.install]
 cmds = [
+  "cd . && flutter config --no-analytics",
   "cd . && flutter pub get"
 ]
 
