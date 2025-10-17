@@ -10,4 +10,4 @@ cmds = [
 cmds = []
 
 [start]
-cmd = "cd backend && php-fpm -y /assets/php-fpm.conf & nginx -c /nginx.conf"
+cmd = "cd backend && php -S 0.0.0.0:80 -t public"
