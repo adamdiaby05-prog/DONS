@@ -4,6 +4,7 @@ nixPkgs = ["flutter", "python3"]
 [phases.install]
 cmds = [
   "cd . && flutter config --no-analytics",
+  "cd . && cp pubspec-ultra-simple.yaml pubspec.yaml",
   "cd . && flutter pub get"
 ]
 
