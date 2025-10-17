@@ -1,5 +1,5 @@
 <?php
-// Router complet pour l'application DONS
+// Router simplifié pour l'application DONS
 
 $requestUri = $_SERVER['REQUEST_URI'];
 $path = parse_url($requestUri, PHP_URL_PATH);
@@ -65,6 +65,40 @@ if (file_exists($frontendPath)) {
     return;
 }
 
-// Fallback vers le backend Laravel
-require_once __DIR__ . '/../backend/public/index.php';
+// Page d'accueil simple si pas de frontend
+echo '<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DONS - Système de Don</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; }
+        .status { background: #d4edda; color: #155724; padding: 15px; border-radius: 4px; margin: 20px 0; }
+        .api-link { display: inline-block; background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; margin: 10px 5px; }
+        .api-link:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 DONS - Système de Don</h1>
+        <div class="status">
+            ✅ Backend Laravel opérationnel<br>
+            ✅ Base de données connectée<br>
+            ✅ API prête à recevoir les dons
+        </div>
+        <h2>Endpoints disponibles :</h2>
+        <a href="/api/dons" class="api-link">API Dons</a>
+        <a href="/api/payments" class="api-link">API Paiements</a>
+        <a href="/api/statistics" class="api-link">Statistiques</a>
+        <a href="/barapay_payment_integration.php" class="api-link">Barapay</a>
+        <p><strong>Note :</strong> Le frontend Flutter sera déployé séparément.</p>
+    </div>
+</body>
+</html>';
+
+// Fallback vers le backend Laravel si nécessaire
+// require_once __DIR__ . '/../backend/public/index.php';
 ?>

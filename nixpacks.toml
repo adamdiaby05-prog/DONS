@@ -1,0 +1,17 @@
+[phases.setup]
+nixPkgs = ["php", "phpPackages.composer"]
+
+[phases.install]
+cmds = [
+  "cd backend && composer install --ignore-platform-reqs --no-dev --optimize-autoloader"
+]
+
+[phases.build]
+cmds = [
+  "cd backend && cp env.production .env",
+  "cd backend && php artisan key:generate",
+  "cd backend && php artisan config:cache"
+]
+
+[start]
+cmd = "cd /app/backend && php -S 0.0.0.0:80 -t public"

@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["php", "phpPackages.composer", "nginx", "nodejs_18", "npm-9_x"]
+nixPkgs = ["php", "phpPackages.composer", "nodejs_18", "npm-9_x"]
 
 [phases.install]
 cmds = [
@@ -12,12 +12,8 @@ cmds = [
   "cd backend && cp env.production .env",
   "cd backend && php artisan key:generate",
   "cd backend && php artisan config:cache",
-  "cd frontend && npm run build",
-  "mkdir -p /app/complete",
-  "cp -r /app/backend/public/* /app/complete/",
-  "cp -r /app/frontend/build/web/* /app/complete/",
-  "cp /app/nginx-complete.conf /app/complete/nginx.conf"
+  "cd frontend && npm run build"
 ]
 
 [start]
-cmd = "cd /app/complete && nginx -c nginx.conf & php-fpm -D && php -S 0.0.0.0:80 -t ."
+cmd = "cd /app && php -S 0.0.0.0:80 -t public"
