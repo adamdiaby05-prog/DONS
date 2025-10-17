@@ -5,11 +5,11 @@
  */
 
 // Configuration de la base de données
-$host = $_ENV['DB_HOST'] ?? 'dons-database';
+$host = $_ENV['DB_HOST'] ?? 'dons-database-ysb0io';
 $port = $_ENV['DB_PORT'] ?? '5432';
 $database = $_ENV['DB_DATABASE'] ?? 'Dons';
 $username = $_ENV['DB_USERNAME'] ?? 'postgres';
-$password = $_ENV['DB_PASSWORD'] ?? '';
+$password = $_ENV['DB_PASSWORD'] ?? '9vx4rsve50bkmekz';
 
 echo "🔍 Test de connexion à PostgreSQL...\n";
 echo "Host: $host\n";

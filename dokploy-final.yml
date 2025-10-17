@@ -14,6 +14,8 @@ services:
       - DB_DATABASE=Dons
       - DB_USERNAME=postgres
       - DB_PASSWORD=9vx4rsve50bkmekz
+      - APP_KEY=${APP_KEY}
+      - APP_URL=${APP_URL:-http://localhost}
     volumes:
       - ./backend/storage:/var/www/html/backend/storage
     restart: unless-stopped
@@ -24,9 +26,9 @@ services:
       retries: 3
       start_period: 40s
     depends_on:
-      - postgres
+      - dons-database-ysb0io
 
-  postgres:
+  dons-database-ysb0io:
     image: postgres:15
     environment:
       POSTGRES_DB: Dons
@@ -35,13 +37,13 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - dons_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d Dons"]
       interval: 30s
       timeout: 10s
       retries: 3
 
 volumes:
-  postgres_data:
+  dons_data:
