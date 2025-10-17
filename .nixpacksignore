@@ -11,6 +11,5 @@
 tests/
 phpunit.xml
 
-# Ignore build artifacts
-build/
+# Ignore build artifacts (but keep frontend build)
 storage/*.log
