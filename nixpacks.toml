@@ -3,11 +3,11 @@ nixPkgs = ["php", "phpPackages.composer", "nginx"]
 
 [phases.install]
 cmds = [
-  "composer install --ignore-platform-reqs --no-dev --optimize-autoloader"
+  "cd backend && composer install --ignore-platform-reqs --no-dev --optimize-autoloader"
 ]
 
 [phases.build]
 cmds = []
 
 [start]
-cmd = "php-fpm -y /assets/php-fpm.conf & nginx -c /nginx.conf"
+cmd = "cd backend && php-fpm -y /assets/php-fpm.conf & nginx -c /nginx.conf"
