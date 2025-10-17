@@ -7,7 +7,11 @@ cmds = [
 ]
 
 [phases.build]
-cmds = []
+cmds = [
+  "cd backend && cp env.production .env",
+  "cd backend && php artisan key:generate",
+  "cd backend && php artisan config:cache"
+]
 
 [start]
 cmd = "cd backend && php -S 0.0.0.0:80 -t public"
