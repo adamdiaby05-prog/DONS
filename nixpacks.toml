@@ -1,16 +1,18 @@
 [phases.setup]
-nixPkgs = ["php", "phpPackages.composer", "nginx"]
+nixPkgs = ["php", "phpPackages.composer", "nginx", "flutter"]
 
 [phases.install]
 cmds = [
-  "cd backend && composer install --ignore-platform-reqs --no-dev --optimize-autoloader"
+  "cd backend && composer install --ignore-platform-reqs --no-dev --optimize-autoloader",
+  "cd frontend && flutter pub get"
 ]
 
 [phases.build]
 cmds = [
   "cd backend && cp env.production .env",
   "cd backend && php artisan key:generate",
-  "cd backend && php artisan config:cache"
+  "cd backend && php artisan config:cache",
+  "cd frontend && flutter build web --release"
 ]
 
 [start]
