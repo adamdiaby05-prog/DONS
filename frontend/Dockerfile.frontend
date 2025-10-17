@@ -32,14 +32,11 @@ WORKDIR /app
 # Vérifier que nous sommes dans le bon répertoire
 RUN ls -la
 
-# Vérifier que le build existe déjà
-RUN ls -la build/web/
+# Installer les dépendances Flutter
+RUN flutter pub get
 
-# Si le build n'existe pas, l'installer et construire
-RUN if [ ! -d "build/web" ]; then \
-        flutter pub get && \
-        flutter build web --release; \
-    fi
+# Construire l'application Flutter pour le web
+RUN flutter build web --release
 
 # Exposer le port 3000
 EXPOSE 3000
