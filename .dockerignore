@@ -1,0 +1,141 @@
+# Fichiers et dossiers à ignorer lors du build Docker
+
+# Dossiers problématiques
+Nouveau dossier/
+frontend/
+bpay_sdk/
+
+# Fichiers de test
+test_*.php
+test_*.dart
+*_test.php
+*_test.dart
+
+# Fichiers Windows
+*.bat
+*.cmd
+
+# Documentation
+*.md
+README*.md
+GUIDE_*.md
+SOLUTION_*.md
+INTEGRATION_*.md
+CORRECTION_*.md
+OUVERTURE_*.md
+
+# Logs
+*.log
+logs/
+
+# Fichiers de développement
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Fichiers temporaires
+*.tmp
+*.temp
+*~
+
+# Fichiers de configuration locaux
+.env.local
+.env.development
+
+# Dossiers de build
+build/
+dist/
+node_modules/
+
+# Fichiers de cache
+.cache/
+*.cache
+
+# Fichiers de sauvegarde
+*.bak
+*.backup
+
+# Fichiers de test Flutter
+frontend/test/
+frontend/build/
+frontend/.dart_tool/
+
+# Fichiers Android/iOS
+frontend/android/
+frontend/ios/
+frontend/linux/
+frontend/macos/
+frontend/windows/
+
+# Fichiers de configuration Flutter
+frontend/pubspec.lock
+frontend/pubspec.yaml
+frontend/analysis_options.yaml
+
+# Fichiers de documentation Flutter
+frontend/*.md
+frontend/README.md
+frontend/CLIENT_APP_README.md
+frontend/API_CONNECTION_README.md
+frontend/ANIMATIONS_README.md
+frontend/TEST_CONNECTION.md
+frontend/TROUBLESHOOTING.md
+frontend/TOUTES_ERREURS_CORRIGEES.md
+frontend/ERROR_FIXED.md
+frontend/FINAL_SOLUTION.md
+frontend/CORRECTION_APPLIQUEE.md
+frontend/ERREUR_FINALE_CORRIGEE.md
+
+# Fichiers de configuration Docker
+docker-compose.yml
+docker-compose.*.yml
+dokploy*.yml
+
+# Scripts de déploiement
+deploy.sh
+deploy.bat
+setup-database.sh
+setup-database.bat
+
+# Fichiers de test de base de données
+test-db-connection.php
+test-database-tables.php
+init-database.php
+create-tables.sql
+script-complet-dons.sql
+
+# Fichiers de configuration Dokploy
+dokploy-commands.md
+dokploy-terminal-guide.md
+execute-in-dokploy.md
+README_DEPLOYMENT*.md
+README_DONS_DATABASE.md
+README_POSTGRES_DEPLOYMENT.md
+README_BARAPAY_INTEGRATION.md
+
+# Fichiers de solution
+SOLUTION_*.md
+CORRECTION_*.md
+GUIDE_*.md
+INTEGRATION_*.md
+OUVERTURE_*.md
+
+# Fichiers de test
+test_*.php
+test_*.dart
+*_test.php
+*_test.dart
+
+# Fichiers de logs
+*.log
+logs/
+
+# Fichiers temporaires
+*.tmp
+*.temp
+*~
+
+# Fichiers de sauvegarde
+*.bak
+*.backup

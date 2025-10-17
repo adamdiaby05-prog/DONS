@@ -19,21 +19,21 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Définir le répertoire de travail
 WORKDIR /var/www/html
 
-# Copier les fichiers du projet
-COPY . .
+# Copier uniquement le dossier backend
+COPY backend/ .
 
 # Installer les dépendances PHP
 RUN composer install --no-dev --optimize-autoloader
 
-# Installer les dépendances Node.js et construire les assets
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs \
-    && npm install \
-    && npm run build
+# Installer les dépendances Node.js et construire les assets (si nécessaire)
+# RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+#     && apt-get install -y nodejs \
+#     && npm install \
+#     && npm run build
 
 # Configurer Apache
 RUN a2enmod rewrite
-COPY .htaccess /var/www/html/.htaccess
+COPY backend/.htaccess /var/www/html/.htaccess
 
 # Donner les permissions appropriées
 RUN chown -R www-data:www-data /var/www/html \
