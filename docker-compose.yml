@@ -9,9 +9,9 @@ services:
       - APP_ENV=production
       - APP_DEBUG=false
       - DB_CONNECTION=pgsql
-      - DB_HOST=postgres
+      - DB_HOST=dons-database
       - DB_PORT=5432
-      - DB_DATABASE=dons
+      - DB_DATABASE=Dons
       - DB_USERNAME=postgres
       - DB_PASSWORD=your_postgres_password
     volumes:
@@ -22,7 +22,7 @@ services:
   postgres:
     image: postgres:15
     environment:
-      POSTGRES_DB: dons
+      POSTGRES_DB: Dons
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: your_postgres_password
     ports:

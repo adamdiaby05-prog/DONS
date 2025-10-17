@@ -5,9 +5,9 @@
  */
 
 // Configuration de la base de données
-$host = $_ENV['DB_HOST'] ?? 'postgres';
+$host = $_ENV['DB_HOST'] ?? 'dons-database';
 $port = $_ENV['DB_PORT'] ?? '5432';
-$database = $_ENV['DB_DATABASE'] ?? 'dons';
+$database = $_ENV['DB_DATABASE'] ?? 'Dons';
 $username = $_ENV['DB_USERNAME'] ?? 'postgres';
 $password = $_ENV['DB_PASSWORD'] ?? '';
 
