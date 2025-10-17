@@ -1,0 +1,159 @@
+# Dockerfile simple pour le frontend DONS
+FROM python:3.11-slim
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Copier tous les fichiers du projet
+COPY . .
+
+# Créer le répertoire de build
+RUN mkdir -p build/web
+
+# Créer une page HTML complète
+RUN cat > build/web/index.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DONS - Système de gestion de cotisations</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px;
+        }
+        .header { 
+            text-align: center; 
+            color: white; 
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .content { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin: 20px 0;
+        }
+        .api-link { 
+            display: inline-block; 
+            margin: 10px; 
+            padding: 15px 30px; 
+            background: #3498db; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 8px; 
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .api-link:hover { 
+            background: #2980b9; 
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .feature { 
+            margin: 20px 0; 
+            padding: 20px; 
+            background: #f8f9fa; 
+            border-left: 5px solid #3498db; 
+            border-radius: 5px;
+        }
+        .status { 
+            color: #27ae60; 
+            font-weight: bold; 
+            font-size: 18px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        .card h3 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="header">🚀 DONS - Système de gestion de cotisations</h1>
+        
+        <div class="content">
+            <p class="status">✅ Frontend déployé avec succès !</p>
+            <p>Bienvenue dans l'application DONS ! Cette interface vous permet de gérer les cotisations pour vos groupes et associations.</p>
+
+            <h2>🔗 Liens vers l'API Backend :</h2>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="http://adm.pront-ix.com/api" class="api-link" target="_blank">API Backend</a>
+                <a href="http://adm.pront-ix.com/api/test" class="api-link" target="_blank">Test API</a>
+                <a href="http://adm.pront-ix.com/api/campaign" class="api-link" target="_blank">Campaign API</a>
+                <a href="http://adm.pront-ix.com/api/payments" class="api-link" target="_blank">Payments API</a>
+            </div>
+
+            <div class="grid">
+                <div class="card">
+                    <h3>👥 Gestion des groupes</h3>
+                    <p>Créez et gérez vos groupes d'associations avec une interface intuitive.</p>
+                </div>
+                <div class="card">
+                    <h3>💰 Suivi des cotisations</h3>
+                    <p>Suivez les paiements et contributions en temps réel.</p>
+                </div>
+                <div class="card">
+                    <h3>🔒 Paiements sécurisés</h3>
+                    <p>Intégration avec BPay pour des paiements sécurisés.</p>
+                </div>
+                <div class="card">
+                    <h3>📊 Tableau de bord</h3>
+                    <p>Interface complète de gestion pour les administrateurs.</p>
+                </div>
+            </div>
+
+            <div class="feature">
+                <h3>🔧 Configuration technique :</h3>
+                <ul>
+                    <li><strong>Backend :</strong> Laravel (adm.pront-ix.com)</li>
+                    <li><strong>Base de données :</strong> PostgreSQL</li>
+                    <li><strong>Frontend :</strong> HTML statique</li>
+                    <li><strong>Serveur :</strong> Python HTTP Server</li>
+                </ul>
+            </div>
+
+            <div class="feature">
+                <h3>📋 Fonctionnalités disponibles :</h3>
+                <ul>
+                    <li>✅ Gestion des groupes et associations</li>
+                    <li>✅ Suivi des cotisations et paiements</li>
+                    <li>✅ Interface administrateur complète</li>
+                    <li>✅ Intégration BPay pour les paiements</li>
+                    <li>✅ Rapports et statistiques</li>
+                    <li>✅ Gestion des membres</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+EOF
+
+# Exposer le port 80
+EXPOSE 80
+
+# Démarrer le serveur Python
+CMD ["python", "-m", "http.server", "80", "--directory", "build/web"]
