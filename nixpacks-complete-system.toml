@@ -1,0 +1,33 @@
+[phases.setup]
+nixPkgs = ["php", "phpPackages.composer", "flutter", "nodejs_18", "npm-9_x", "nginx"]
+
+[phases.install]
+cmds = [
+  "cd backend && composer install --ignore-platform-reqs --no-dev --optimize-autoloader",
+  "cd frontend && flutter pub get",
+  "cd frontend && npm install",
+  "cd 'Nouveau dossier/paymoney_sdk(1)/bpay_sdk/php' && composer install --ignore-platform-reqs --no-dev --optimize-autoloader"
+]
+
+[phases.build]
+cmds = [
+  "cd backend && cp env.production .env",
+  "cd backend && php artisan key:generate",
+  "cd backend && php artisan config:cache",
+  "cd frontend && flutter build web --release --web-renderer html",
+  "mkdir -p /app/complete-deploy",
+  "mkdir -p /app/complete-deploy/frontend",
+  "mkdir -p /app/complete-deploy/backend",
+  "mkdir -p /app/complete-deploy/bpay",
+  "cp -r /app/backend/* /app/complete-deploy/backend/",
+  "cp -r /app/frontend/build/web/* /app/complete-deploy/frontend/",
+  "cp -r /app/'Nouveau dossier/paymoney_sdk(1)/bpay_sdk/php'/* /app/complete-deploy/bpay/",
+  "cp /app/barapay_payment_integration.php /app/complete-deploy/",
+  "cp /app/api_payments_*.php /app/complete-deploy/",
+  "cp /app/payment_*.php /app/complete-deploy/",
+  "cp /app/test_*.php /app/complete-deploy/",
+  "cp /app/nginx-complete.conf /app/complete-deploy/nginx.conf"
+]
+
+[start]
+cmd = "cd /app/complete-deploy && nginx -c nginx.conf & php-fpm -D && php -S 0.0.0.0:80 -t ."

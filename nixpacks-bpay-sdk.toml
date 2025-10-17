@@ -1,0 +1,21 @@
+[phases.setup]
+nixPkgs = ["php", "phpPackages.composer", "nginx"]
+
+[phases.install]
+cmds = [
+  "cd 'Nouveau dossier/paymoney_sdk(1)/bpay_sdk/php' && composer install --ignore-platform-reqs --no-dev --optimize-autoloader"
+]
+
+[phases.build]
+cmds = [
+  "mkdir -p /app/bpay-deploy",
+  "cp -r /app/'Nouveau dossier/paymoney_sdk(1)/bpay_sdk/php'/* /app/bpay-deploy/",
+  "cp /app/barapay_payment_integration.php /app/bpay-deploy/",
+  "cp /app/api_payments_*.php /app/bpay-deploy/",
+  "cp /app/payment_*.php /app/bpay-deploy/",
+  "cp /app/test_*.php /app/bpay-deploy/",
+  "echo '<?php phpinfo(); ?>' > /app/bpay-deploy/info.php"
+]
+
+[start]
+cmd = "cd /app/bpay-deploy && php -S 0.0.0.0:80"
