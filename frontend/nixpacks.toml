@@ -1,15 +1,17 @@
 # Configuration Nixpacks pour le Frontend Flutter DONS
 [phases.setup]
-nixPkgs = ["nodejs", "npm", "python3"]
+nixPkgs = ["nodejs", "python3"]
 
 [phases.install]
 cmds = [
-    "npm install -g @flutter/cli",
+    "curl -fsSL https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.24.5-stable.tar.xz | tar -xJ -C /opt/",
+    "export PATH=/opt/flutter/bin:$PATH",
     "flutter pub get"
 ]
 
 [phases.build]
 cmds = [
+    "export PATH=/opt/flutter/bin:$PATH",
     "flutter build web --release"
 ]
 

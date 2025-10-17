@@ -1,10 +1,24 @@
 # Dockerfile pour le Frontend Flutter DONS
-FROM node:18-alpine
+FROM ubuntu:22.04
+
+# Installer les dépendances système
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    unzip \
+    xz-utils \
+    zip \
+    libglu1-mesa \
+    python3 \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
 
 # Installer Flutter
-RUN apk add --no-cache git curl unzip xz-utils zip
 RUN git clone https://github.com/flutter/flutter.git -b stable /flutter
 ENV PATH="/flutter/bin:/flutter/bin/cache/dart-sdk/bin:${PATH}"
+
+# Vérifier l'installation de Flutter
+RUN flutter doctor
 
 # Définir le répertoire de travail
 WORKDIR /app
@@ -25,4 +39,5 @@ RUN flutter build web --release
 EXPOSE 3000
 
 # Démarrer le serveur
-CMD ["cd", "build/web", "&&", "python", "-m", "http.server", "3000"]
+WORKDIR /app/frontend/build/web
+CMD ["python3", "-m", "http.server", "3000"]
