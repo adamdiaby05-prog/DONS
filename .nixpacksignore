@@ -1,22 +1,8 @@
-# Ignore frontend directory
-frontend/
-node_modules/
-npm-debug.log
-yarn-error.log
-
-# Ignore Node.js files
-package.json
-package-lock.json
-yarn.lock
-vite.config.js
-tailwind.config.js
-
-# Ignore development files
+# Ignore development files only
 .env
 .env.example
 .git/
 .gitignore
-README.md
 *.md
 *.bat
 *.sh
@@ -24,3 +10,7 @@ README.md
 # Ignore test files
 tests/
 phpunit.xml
+
+# Ignore build artifacts
+build/
+storage/*.log
